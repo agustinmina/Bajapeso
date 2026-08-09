@@ -3,12 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Peso</title>
+    <title>Peso Acabado - Tu Coach</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Aplicación Web de Control de Peso</h1>
-    <p>¡Listo para empezar a programar sin complicaciones!</p>
+    <div class="container">
+        <h1>Peso Acabado</h1>
+        <p class="verse">"Todo lo puedo en Cristo que me fortalece." — Filipenses 4:13</p>
+        
+        <div id="chat-container">
+            <div id="chat-messages">
+                <div class="message ai">¡Hola Guty! Estoy listo. Dime cómo te fue hoy con tu ejercicio, tu comida o tu peso, y lo registramos de inmediato.</div>
+            </div>
+            
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Ej: Hoy corrí 3km, hice el día 9..." autocomplete="off">
+                <button id="send-btn">Enviar</button>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <h3>Tus Registros Guardados</h3>
+            <ul id="history-list"></ul>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
