@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// 1. FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyB2VTYw7MvCIQC6vh0HGl3R0FBEmKl9Km4",
   authDomain: "bajapeso-c4216.firebaseapp.com",
@@ -14,11 +15,9 @@ let db = null;
 try {
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
-} catch (e) {
-  console.error("Firebase err:", e);
-}
+} catch (e) { console.error("Error Firebase:", e); }
 
-// Navegación entre pestañas
+// 2. NAVEGACIÓN ESTRICTA DE PANTALLAS
 const btnChat = document.getElementById('btn-pantalla-chat');
 const btnRegistro = document.getElementById('btn-pantalla-registro');
 const screenChat = document.getElementById('pantalla-chat');
@@ -38,43 +37,59 @@ btnRegistro.addEventListener('click', () => {
     screenChat.classList.remove('active');
 });
 
-// Elementos de Chat
+// 3. IA REAL DEL COACH
+const GEMINI_API_KEY = "AQ.Ab8RN6KALx3FFt5tliXpnzVy9Q05LXlEMkJ1GWqx-Djf6UCZXA"; 
+
+async function consultarIA(mensajeUsuario) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const promptPersonalidad = `Eres un coach de disciplina implacable para Agustín (Guty). Su objetivo es bajar de peso (inició en 94kg) usando Nike Run Club y ejercicios en casa. Responde a su mensaje de forma clara, directa y dura, sin rodeos, sin hacerle sentir mal pero no le dejes pasar excusas. No seas repetitivo. Mensaje de Guty: "${mensajeUsuario}"`;
+
+    try {
+        const respuesta = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: promptPersonalidad }] }] })
+        });
+        const datos = await respuesta.json();
+        return datos.candidates[0].content.parts[0].text;
+    } catch (error) {
+        return "Conexión fallida. Revisa tu internet o la llave API.";
+    }
+}
+
+// 4. LÓGICA DEL CHAT
 const chatMessages = document.getElementById('chat-messages');
 const chatInput = document.getElementById('chat-input');
 const enviarChatBtn = document.getElementById('enviar-chat-btn');
 
-enviarChatBtn.addEventListener('click', enviarChat);
-chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarChat(); });
+enviarChatBtn.addEventListener('click', manejarEnvioChat);
+chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') manejarEnvioChat(); });
 
-function enviarChat() {
+async function manejarEnvioChat() {
     const texto = chatInput.value.trim();
     if (!texto) return;
+    
     agregarBurbuja(texto, 'user');
     chatInput.value = '';
+    enviarChatBtn.textContent = "Pensando...";
+    enviarChatBtn.disabled = true;
 
-    setTimeout(() => {
-        let resp = "Entendido, Guty. Claridad y constancia sin pretextos.";
-        const t = texto.toLowerCase();
-        if (t.includes('biblia') || t.includes('versiculo') || t.includes('cita')) {
-            resp = `"Todo lo puedo en Cristo que me fortalece." — Filipenses 4:13`;
-        } else if (t.includes('como voy') || t.includes('peso')) {
-            resp = `Partimos de 94 kg. Revisa tu pestaña de bitácora para ver tus avances guardados.`;
-        } else if (t.includes('hola') || t.includes('buenos dias')) {
-            resp = `¡Hola Guty! Listo para dar resultados hoy. ¿Qué entrenamos?`;
-        }
-        agregarBurbuja(resp, 'coach');
-    }, 400);
+    const respuestaIA = await consultarIA(texto);
+    
+    agregarBurbuja(respuestaIA, 'coach');
+    enviarChatBtn.textContent = "Enviar Mensaje";
+    enviarChatBtn.disabled = false;
 }
 
 function agregarBurbuja(txt, tipo) {
     const div = document.createElement('div');
     div.classList.add('msg', tipo);
-    div.textContent = txt;
+    div.innerHTML = txt.replace(/\n/g, '<br>'); 
     chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Elementos de Registro
+// 5. REGISTRO FIREBASE Y LOCAL
 const guardarBtn = document.getElementById('guardar-btn');
 const pesoInput = document.getElementById('peso-input');
 const notaInput = document.getElementById('nota-input');
@@ -85,36 +100,22 @@ document.addEventListener('DOMContentLoaded', cargarDatos);
 guardarBtn.addEventListener('click', async () => {
     const peso = pesoInput.value.trim();
     const nota = notaInput.value.trim();
-    if (!peso && !nota) {
-        alert("Escribe al menos tu peso o una nota.");
-        return;
-    }
+    if (!peso && !nota) { alert("Ingresa tu peso o una nota."); return; }
 
     guardarBtn.textContent = "Guardando...";
     guardarBtn.disabled = true;
 
     const fechaStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
-    const itemData = { 
-        peso: peso ? parseFloat(peso) : null, 
-        nota: nota || "Sin notas", 
-        fecha: fechaStr, 
-        timestamp: Date.now() 
-    };
+    const itemData = { peso: peso ? parseFloat(peso) : null, nota: nota || "Sin notas", fecha: fechaStr, timestamp: Date.now() };
 
     try {
-        if (db) {
-            await addDoc(collection(db, "registros_peso"), itemData);
-        }
-    } catch (e) {
-        console.warn("Firebase guardado demorado, usando respaldo local:", e);
-    }
+        if (db) await addDoc(collection(db, "registros_peso"), itemData);
+    } catch (e) { console.warn("Fallo Firebase, usando local."); }
 
-    // Guardar siempre en almacenamiento local para respuesta instantánea en el celular
     let local = JSON.parse(localStorage.getItem('peso_local')) || [];
     local.unshift(itemData);
     localStorage.setItem('peso_local', JSON.stringify(local));
 
-    alert("¡Guardado correctamente!");
     pesoInput.value = '';
     notaInput.value = '';
     guardarBtn.textContent = "Guardar Registro";
@@ -132,19 +133,12 @@ async function cargarDatos() {
             const snap = await getDocs(q);
             snap.forEach(d => items.push(d.data()));
         }
-    } catch (e) {
-        console.warn("Leyendo de respaldo local por red móvil.");
-    }
+    } catch (e) { console.warn("Leyendo local."); }
 
-    if (items.length === 0) {
-        items = JSON.parse(localStorage.getItem('peso_local')) || [];
-    }
+    if (items.length === 0) items = JSON.parse(localStorage.getItem('peso_local')) || [];
 
     historyList.innerHTML = '';
-    if (items.length === 0) {
-        historyList.innerHTML = '<li class="history-item">Aún no hay registros guardados.</li>';
-        return;
-    }
+    if (items.length === 0) { historyList.innerHTML = '<li class="history-item">Aún no hay registros.</li>'; return; }
 
     items.forEach(d => {
         const li = document.createElement('li');
