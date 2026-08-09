@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peso Acabado - Control y Progreso</title>
+    <title>Peso Acabado - Tu Coach</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,37 +11,43 @@
         <h1>Peso Acabado</h1>
         <p class="verse">"Todo lo puedo en Cristo que me fortalece." — Filipenses 4:13</p>
         
-        <!-- Sección de Registro Diario -->
+        <!-- Sección de Chat Directo con el Coach -->
         <div class="card">
-            <h3>Registrar Avance del Día</h3>
+            <h3>💬 Chat con tu Coach</h3>
+            <div id="chat-messages">
+                <div class="msg coach">¡Hola Guty! Estoy aquí para exigirte claridad y constancia. Escríbeme lo que quieras, pregúntame cómo vas o pídeme una cita bíblica cuando lo necesites.</div>
+            </div>
+            <div class="form-group" style="margin-bottom: 5px;">
+                <input type="text" id="chat-input" placeholder="Escribe aquí con tu coach..." autocomplete="off">
+            </div>
+            <button id="enviar-chat-btn">Enviar Mensaje</button>
+        </div>
+
+        <!-- Sección de Bitácora y Peso -->
+        <div class="card">
+            <h3>📊 Registrar Avance (Peso & Ejercicio)</h3>
             <div class="form-group">
                 <label for="peso-input">Peso actual (kg):</label>
-                <input type="number" id="peso-input" step="0.1" placeholder="Ej: 93.5">
+                <input type="number" id="peso-input" step="0.1" placeholder="Ej: 94">
             </div>
             
             <div class="form-group">
-                <label for="nota-input">Bitácora / Comentarios (Nike Run Club, Ejercicios en Casa):</label>
-                <textarea id="nota-input" placeholder="Ej: Hoy corrí 3km y completé el Día 9..."></textarea>
+                <label for="nota-input">Bitácora (Nike Run Club, Ejercicios en Casa):</label>
+                <textarea id="nota-input" placeholder="Ej: Hoy cumplí el día 9..."></textarea>
             </div>
 
-            <div class="form-group">
-                <label for="imagen-input">Subir captura de evidencia:</label>
-                <input type="file" id="imagen-input" accept="image/*">
-            </div>
-
-            <button id="guardar-btn">Guardar Registro en la Nube</button>
+            <button id="guardar-btn">Guardar en la Nube</button>
         </div>
 
-        <!-- Sección de Historial -->
+        <!-- Historial en la Nube -->
         <div class="card">
-            <h3>Historial de Registros</h3>
+            <h3>Historial Guardado</h3>
             <ul id="history-list" class="history-list">
-                <li class="history-item">Cargando registros desde Firebase...</li>
+                <li class="history-item">Cargando registros...</li>
             </ul>
         </div>
     </div>
 
-    <!-- Scripts de Firebase SDK (Versión modular compatible con web) -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
