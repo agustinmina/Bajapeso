@@ -1,8 +1,6 @@
-// Importar Firebase desde los CDNs oficiales para la web
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Configuración de tu proyecto en Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyB2VTYw7MvCIQC6vh0HGl3R0FBEmKl9Km4",
   authDomain: "bajapeso-c4216.firebaseapp.com",
@@ -12,116 +10,134 @@ const firebaseConfig = {
   appId: "1:461113411163:web:ae8f8c113eced78044217e"
 };
 
-// Inicializar Firebase con manejo de errores para evitar bloqueos
 let db = null;
 try {
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
 } catch (error) {
-  console.error("Error al inicializar Firebase:", error);
+  console.error("Error Firebase:", error);
 }
 
-// Referencias de la interfaz
+// Elementos
+const chatMessages = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const enviarChatBtn = document.getElementById('enviar-chat-btn');
 const guardarBtn = document.getElementById('guardar-btn');
 const pesoInput = document.getElementById('peso-input');
 const notaInput = document.getElementById('nota-input');
 const historyList = document.getElementById('history-list');
 
-// Cargar registros al abrir la página
+let memoriaRegistros = []; // Almacenará los datos leídos de Firebase para el contexto del coach
+
 document.addEventListener('DOMContentLoaded', () => {
-    if (db) {
-        cargarRegistros();
-    } else {
-        historyList.innerHTML = '<li class="history-item">Modo local: Firebase no configurado o sin conexión activa.</li>';
-    }
+    if (db) cargarDatosYMemoria();
 });
 
+// Enviar mensaje al Chat con el Coach
+enviarChatBtn.addEventListener('click', () => procesarMensajeChat());
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') procesarMensajeChat();
+});
+
+function procesarMensajeChat() {
+    const texto = chatInput.value.trim();
+    if (!texto) return;
+
+    agregarBurbujaChat(texto, 'user');
+    chatInput.value = '';
+
+    // Generar respuesta del coach analizando lo que escribió y la memoria de Firebase
+    setTimeout(() => {
+        let respuesta = "Entendido, Guty. Mantén firme la disciplina y no aflojes el paso.";
+        const txtLC = texto.toLowerCase();
+
+        if (txtLC.includes('biblia') || txtLC.includes('versiculo') || txtLC.includes('cita')) {
+            respuesta = `"Todo lo puedo en Cristo que me fortalece." — Filipenses 4:13. Apóyate en eso para avanzar hoy.`;
+        } else if (txtLC.includes('como voy') || txtLC.includes('progreso') || txtLC.includes('historial')) {
+            if (memoriaRegistros.length > 0) {
+                const ultimo = memoriaRegistros[0];
+                respuesta = `Revisando tu historial, tu último registro fue de ${ultimo.peso ? ultimo.peso + ' kg' : 'sin peso registrado'}. Comentario: "${ultimo.nota}". ¡Sigue adelante!`;
+            } else {
+                respuesta = `Aún no tienes registros guardados en la base de datos. Empezamos con una base de 94 kg, ¡a registrar tus avances!`;
+            }
+        } else if (txtLC.includes('triste') || txtLC.includes('cansado') || txtLC.includes('flojera')) {
+            respuesta = `El cansancio pasa, la meta se queda. Sin rodeos: descansa si es necesario, pero mañana cumples con el ejercicio sin excusas.`;
+        } else {
+            respuesta = `Recuerda tu objetivo, Guty. Claridad y constancia. ¿Qué tal vas con Nike Run Club o los ejercicios en casa hoy?`;
+        }
+
+        agregarBurbujaChat(respuesta, 'coach');
+    }, 500);
+}
+
+function agregarBurbujaChat(texto, tipo) {
+    const div = document.createElement('div');
+    div.classList.add('msg', tipo);
+    div.textContent = texto;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Guardar Bitácora / Peso en la Nube
 guardarBtn.addEventListener('click', async () => {
     const peso = pesoInput.value.trim();
     const nota = notaInput.value.trim();
-    
+
     if (!peso && !nota) {
-        alert("Escribe al menos tu peso o una nota de tu entrenamiento.");
+        alert("Escribe al menos tu peso o una nota.");
         return;
     }
 
     guardarBtn.textContent = "Guardando...";
     guardarBtn.disabled = true;
 
-    // Generar respuesta del Coach Virtual basada en lo que escribiste
-    let respuestaCoach = "Anotado, Guty. La disciplina se construye todos los días.";
-    if (peso) {
-        respuestaCoach = `Registré tus ${peso} kg. Recuerda de dónde partimos (94 kg); no hay tregua, mantén el enfoque.`;
-    }
-    if (nota.toLowerCase().includes('no hice') || nota.toLowerCase().includes('mañana')) {
-        respuestaCoach = `Entendido. Descansas hoy, pero mañana sin falta se cumple con el ejercicio. Cero pretextos.`;
-    } else if (nota.toLowerCase().includes('corrí') || nota.toLowerCase().includes('ejercicio')) {
-        respuestaCoach = `¡Excelente esfuerzo! Así se hace, el movimiento diario es el que trae resultados reales.`;
-    }
-
-    const registroTexto = `[${new Date().toLocaleDateString()}] Peso: ${peso ? peso + ' kg' : 'N/A'} - ${nota} | 🤖 Coach: "${respuestaCoach}"`;
-
     try {
         if (db) {
             await addDoc(collection(db, "registros_peso"), {
                 peso: peso ? parseFloat(peso) : null,
                 nota: nota || "Sin comentarios",
-                coachRespuesta: respuestaCoach,
                 fecha: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
                 timestamp: Date.now()
             });
-            await cargarRegistros();
-        } else {
-            // Respaldo local si Firebase falla para que nunca se quede trabado el botón
-            let localHist = JSON.parse(localStorage.getItem('peso_backup')) || [];
-            localHist.unshift(registroTexto);
-            localStorage.setItem('peso_backup', JSON.stringify(localHist));
-            mostrarHistorialLocal(localHist);
+            alert("¡Guardado en la nube con éxito!");
+            pesoInput.value = '';
+            notaInput.value = '';
+            cargarDatosYMemoria();
         }
-
-        alert("¡Guardado con éxito!\n\n🤖 Coach Virtual:\n" + respuestaCoach);
-        pesoInput.value = '';
-        notaInput.value = '';
     } catch (e) {
-        console.error("Error al guardar en Firestore: ", e);
-        alert("Ocurrió un detalle al guardar en la nube, pero revisa tu historial local.");
+        console.error("Error al guardar:", e);
+        alert("Hubo un error al guardar.");
     } finally {
-        guardarBtn.textContent = "Guardar Registro en la Nube";
+        guardarBtn.textContent = "Guardar en la Nube";
         guardarBtn.disabled = false;
     }
 });
 
-async function cargarRegistros() {
-    historyList.innerHTML = '<li class="history-item">Cargando registros...</li>';
+async function cargarDatosYMemoria() {
+    historyList.innerHTML = '<li class="history-item">Sincronizando...</li>';
     try {
         const q = query(collection(db, "registros_peso"), orderBy("timestamp", "desc"));
         const querySnapshot = await getDocs(q);
         
         historyList.innerHTML = '';
+        memoriaRegistros = [];
+
         if (querySnapshot.empty) {
-            historyList.innerHTML = '<li class="history-item">Aún no hay registros en la nube. ¡Escribe el primero!</li>';
+            historyList.innerHTML = '<li class="history-item">Sin registros previos.</li>';
             return;
         }
 
         querySnapshot.forEach((doc) => {
             const data = doc.data();
+            memoriaRegistros.push(data); // Guardar en memoria para que el chat lo consulte
+            
             const li = document.createElement('li');
             li.classList.add('history-item');
-            li.innerHTML = `<span>[${data.fecha}]</span><br><strong>Peso:</strong> ${data.peso ? data.peso + ' kg' : 'N/A'} <br><em>Nota:</em> ${data.nota}<br>🤖 <strong>Coach:</strong> "${data.coachRespuesta || 'Constancia y disciplina.'}"`;
+            li.innerHTML = `<span>[${data.fecha}]</span> - <strong>Peso:</strong> ${data.peso ? data.peso + ' kg' : 'N/A'} <br><em>${data.nota}</em>`;
             historyList.appendChild(li);
         });
     } catch (e) {
-        console.error("Error al cargar historial:", e);
-        historyList.innerHTML = '<li class="history-item">Error al sincronizar con la base de datos.</li>';
+        console.error("Error al cargar:", e);
+        historyList.innerHTML = '<li class="history-item">Error al leer la base de datos.</li>';
     }
-}
-
-function mostrarHistorialLocal(historial) {
-    historyList.innerHTML = '';
-    historial.forEach(item => {
-        const li = document.createElement('li');
-        li.classList.add('history-item');
-        li.textContent = item;
-        historyList.appendChild(li);
-    });
 }
