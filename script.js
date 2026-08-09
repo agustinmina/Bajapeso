@@ -17,7 +17,7 @@ try {
   db = getFirestore(app);
 } catch (e) { console.error("Error Firebase:", e); }
 
-// 2. NAVEGACIÓN ESTRICTA DE PANTALLAS
+// 2. NAVEGACIÓN
 const btnChat = document.getElementById('btn-pantalla-chat');
 const btnRegistro = document.getElementById('btn-pantalla-registro');
 const screenChat = document.getElementById('pantalla-chat');
@@ -41,6 +41,10 @@ btnRegistro.addEventListener('click', () => {
 const GEMINI_API_KEY = "AQ.Ab8RN6KALx3FFt5tliXpnzVy9Q05LXlEMkJ1GWqx-Djf6UCZXA"; 
 
 async function consultarIA(mensajeUsuario) {
+    if (!GEMINI_API_KEY) {
+        return "Error de llave API vacía.";
+    }
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     const promptPersonalidad = `Eres un coach de disciplina implacable para Agustín (Guty). Su objetivo es bajar de peso (inició en 94kg) usando Nike Run Club y ejercicios en casa. Responde a su mensaje de forma clara, directa y dura, sin rodeos, sin hacerle sentir mal pero no le dejes pasar excusas. No seas repetitivo. Mensaje de Guty: "${mensajeUsuario}"`;
 
@@ -51,9 +55,14 @@ async function consultarIA(mensajeUsuario) {
             body: JSON.stringify({ contents: [{ parts: [{ text: promptPersonalidad }] }] })
         });
         const datos = await respuesta.json();
+        
+        if (datos.error) {
+            return `Error de la IA: ${datos.error.message}`;
+        }
+        
         return datos.candidates[0].content.parts[0].text;
     } catch (error) {
-        return "Conexión fallida. Revisa tu internet o la llave API.";
+        return "Conexión fallida con el servidor de IA. Revisa tu internet.";
     }
 }
 
@@ -89,7 +98,7 @@ function agregarBurbuja(txt, tipo) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// 5. REGISTRO FIREBASE Y LOCAL
+// 5. REGISTRO FIREBASE Y LOCAL (SIN BLOQUEOS)
 const guardarBtn = document.getElementById('guardar-btn');
 const pesoInput = document.getElementById('peso-input');
 const notaInput = document.getElementById('nota-input');
@@ -97,7 +106,7 @@ const historyList = document.getElementById('history-list');
 
 document.addEventListener('DOMContentLoaded', cargarDatos);
 
-guardarBtn.addEventListener('click', async () => {
+guardarBtn.addEventListener('click', () => {
     const peso = pesoInput.value.trim();
     const nota = notaInput.value.trim();
     if (!peso && !nota) { alert("Ingresa tu peso o una nota."); return; }
@@ -108,9 +117,10 @@ guardarBtn.addEventListener('click', async () => {
     const fechaStr = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
     const itemData = { peso: peso ? parseFloat(peso) : null, nota: nota || "Sin notas", fecha: fechaStr, timestamp: Date.now() };
 
-    try {
-        if (db) await addDoc(collection(db, "registros_peso"), itemData);
-    } catch (e) { console.warn("Fallo Firebase, usando local."); }
+    if (db) {
+        addDoc(collection(db, "registros_peso"), itemData)
+            .catch(e => console.warn("Firebase bloqueado."));
+    }
 
     let local = JSON.parse(localStorage.getItem('peso_local')) || [];
     local.unshift(itemData);
