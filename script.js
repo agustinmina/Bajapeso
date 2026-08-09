@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
 // 1. FIREBASE
 const firebaseConfig = {
@@ -17,7 +18,7 @@ try {
   db = getFirestore(app);
 } catch (e) { console.error("Error Firebase:", e); }
 
-// 2. NAVEGACIÓN
+// 2. NAVEGACIÓN ENTRE PANTALLAS
 const btnChat = document.getElementById('btn-pantalla-chat');
 const btnRegistro = document.getElementById('btn-pantalla-registro');
 const screenChat = document.getElementById('pantalla-chat');
@@ -39,30 +40,21 @@ btnRegistro.addEventListener('click', () => {
 
 // 3. IA REAL DEL COACH (MODELO ACTUALIZADO)
 const GEMINI_API_KEY = "AQ.Ab8RN6KALx3FFt5tliXpnzVy9Q05LXlEMkJ1GWqx-Djf6UCZXA"; 
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 async function consultarIA(mensajeUsuario) {
-    if (!GEMINI_API_KEY) return "Falta la llave API.";
-
-    // Usamos la ruta directa y estable de la API v1 con flash
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    
-    const promptPersonalidad = `Eres un coach de disciplina implacable para Agustín (Guty). Su objetivo es bajar de peso (inició en 94kg) usando Nike Run Club y ejercicios en casa. Responde a su mensaje de forma clara, directa y dura, sin rodeos, sin hacerle sentir mal pero no le dejes pasar excusas. No seas repetitivo. Mensaje de Guty: "${mensajeUsuario}"`;
-
     try {
-        const respuesta = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ parts: [{ text: promptPersonalidad }] }] })
-        });
-        const datos = await respuesta.json();
+        // Usamos gemini-2.5-flash que es el modelo vigente y activo
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         
-        if (datos.error) {
-            return `Error de Google: ${datos.error.message}`;
-        }
-        
-        return datos.candidates[0].content.parts[0].text;
+        const promptPersonalidad = `Eres un coach de disciplina implacable para Agustín (Guty). Su objetivo es bajar de peso (inició en 94kg) usando Nike Run Club y ejercicios en casa. Responde a su mensaje de forma clara, directa y dura, sin rodeos, sin hacerle sentir mal pero no le dejes pasar excusas. No seas repetitivo. Mensaje de Guty: "${mensajeUsuario}"`;
+
+        const result = await model.generateContent(promptPersonalidad);
+        const response = await result.response;
+        return response.text();
     } catch (error) {
-        return "Error de red al conectar con la IA.";
+        console.error("Detalle del error IA:", error);
+        return `Error al conectar con el Coach: ${error.message}`;
     }
 }
 
@@ -93,7 +85,7 @@ async function manejarEnvioChat() {
 function agregarBurbuja(txt, tipo) {
     const div = document.createElement('div');
     div.classList.add('msg', tipo);
-    div.innerHTML = txt.replace(/\n/g, '<br>'); 
+    div.innerHTML = txt.replace(/\n/g, '<br>').replace(/\*\*/g, ''); 
     chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -119,7 +111,7 @@ guardarBtn.addEventListener('click', () => {
 
     if (db) {
         addDoc(collection(db, "registros_peso"), itemData)
-            .catch(e => console.warn("Firebase pendiente."));
+            .catch(e => console.warn("Firebase bloqueado."));
     }
 
     let local = JSON.parse(localStorage.getItem('peso_local')) || [];
