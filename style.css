@@ -38,6 +38,39 @@ h1 {
     padding-bottom: 8px;
 }
 
+/* Botones de Navegación entre Pantallas */
+.nav-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    padding: 10px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.tab-btn.active {
+    background: #3182ce;
+    color: white;
+}
+
+/* Control de pantallas (vistas) */
+.screen {
+    display: none;
+}
+
+.screen.active {
+    display: block;
+}
+
 .card {
     background: #fafafa;
     border: 1px solid #e2e8f0;
@@ -77,14 +110,14 @@ textarea {
 
 textarea {
     resize: vertical;
-    height: 60px;
+    height: 70px;
 }
 
 button {
     background: #3182ce;
     color: white;
     border: none;
-    padding: 8px 12px;
+    padding: 10px;
     font-size: 0.95rem;
     font-weight: bold;
     border-radius: 6px;
@@ -96,9 +129,9 @@ button:hover {
     background: #2b6cb0;
 }
 
-/* Estilos específicos para el Chat */
+/* Chat */
 #chat-messages {
-    height: 220px;
+    height: 280px;
     overflow-y: auto;
     border: 1px solid #cbd5e0;
     border-radius: 6px;
@@ -136,7 +169,7 @@ button:hover {
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 180px;
+    max-height: 220px;
     overflow-y: auto;
 }
 
