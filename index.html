@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peso Acabado - Panel de Control</title>
+    <title>Peso Acabado - Panel</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,15 +14,15 @@
         <!-- Pestañas de Navegación -->
         <div class="nav-tabs">
             <button class="tab-btn active" id="btn-pantalla-chat">💬 Chat Coach</button>
-            <button class="tab-btn" id="btn-pantalla-registro">📊 Bitácora & Historial</button>
+            <button class="tab-btn" id="btn-pantalla-registro">📊 Bitácora</button>
         </div>
 
-        <!-- PANTALLA 1: CHAT CON EL COACH -->
+        <!-- PANTALLA 1: CHAT -->
         <div id="pantalla-chat" class="screen active">
             <div class="card">
-                <h3>Asesoría Virtual</h3>
+                <h3>Asesoría Virtual (IA Real)</h3>
                 <div id="chat-messages">
-                    <div class="msg coach">¡Hola Guty! Aquí puedes platicar conmigo, pedirme consejos de disciplina o una cita bíblica.</div>
+                    <div class="msg coach">¡Hola Guty! Ahora sí estoy conectado. Escribe y hablemos de tu progreso. Cero excusas.</div>
                 </div>
                 <div class="form-group" style="margin-bottom: 5px;">
                     <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." autocomplete="off">
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <!-- PANTALLA 2: REGISTRO E HISTORIAL -->
+        <!-- PANTALLA 2: REGISTRO -->
         <div id="pantalla-registro" class="screen">
             <div class="card">
                 <h3>Registrar Avance</h3>
@@ -39,12 +39,10 @@
                     <label for="peso-input">Peso actual (kg):</label>
                     <input type="number" id="peso-input" step="0.1" placeholder="Ej: 94">
                 </div>
-                
                 <div class="form-group">
                     <label for="nota-input">Bitácora (Nike Run Club, Ejercicios):</label>
-                    <textarea id="nota-input" placeholder="Ej: Hoy cumplí la meta..."></textarea>
+                    <textarea id="nota-input" placeholder="Ej: Hoy cumplí..."></textarea>
                 </div>
-
                 <button id="guardar-btn">Guardar Registro</button>
             </div>
 
@@ -56,7 +54,6 @@
             </div>
         </div>
     </div>
-
     <script type="module" src="script.js"></script>
 </body>
 </html>
