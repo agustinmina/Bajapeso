@@ -13,42 +13,74 @@
         
         <!-- Pestañas de Navegación -->
         <div class="nav-tabs">
-            <button class="tab-btn active" id="btn-pantalla-chat">💬 Chat Coach</button>
+            <button class="tab-btn active" id="btn-pantalla-chat">💬 Chat</button>
             <button class="tab-btn" id="btn-pantalla-registro">📊 Bitácora</button>
+            <button class="tab-btn" id="btn-pantalla-habitos">📅 Hábitos</button>
         </div>
 
         <!-- PANTALLA 1: CHAT -->
-        <div id="pantalla-chat" class="screen active">
+        <div id="pantalla-chat" class="screen" style="display: block;">
             <div class="card">
-                <h3>Asesoría Virtual (IA Real)</h3>
+                <h3>Asesoría del Coach</h3>
                 <div id="chat-messages">
-                    <div class="msg coach">¡Hola Guty! Ahora sí estoy conectado. Escribe y hablemos de tu progreso. Cero excusas.</div>
+                    <div class="msg coach">¡Qué tal, Guty! Cuéntame cómo vas hoy con tus metas, tus carreras o tus entrenamientos en casa. Aquí estoy para apoyarte sin rodeos.</div>
                 </div>
                 <div class="form-group" style="margin-bottom: 5px;">
-                    <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." autocomplete="off">
+                    <input type="text" id="chat-input" placeholder="Escribe al coach o dale instrucciones..." autocomplete="off">
                 </div>
                 <button id="enviar-chat-btn">Enviar Mensaje</button>
             </div>
         </div>
 
-        <!-- PANTALLA 2: REGISTRO -->
-        <div id="pantalla-registro" class="screen">
+        <!-- PANTALLA 2: BITÁCORA Y EVIDENCIA -->
+        <div id="pantalla-registro" class="screen" style="display: none;">
             <div class="card">
-                <h3>Registrar Avance</h3>
+                <h3>Registrar Avance & Evidencia</h3>
                 <div class="form-group">
                     <label for="peso-input">Peso actual (kg):</label>
                     <input type="number" id="peso-input" step="0.1" placeholder="Ej: 94">
                 </div>
                 <div class="form-group">
                     <label for="nota-input">Bitácora (Nike Run Club, Ejercicios):</label>
-                    <textarea id="nota-input" placeholder="Ej: Hoy cumplí..."></textarea>
+                    <textarea id="nota-input" placeholder="Ej: Corrí 5km a buen ritmo..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="imagen-input">📷 Subir captura de evidencia:</label>
+                    <input type="file" id="imagen-input" accept="image/*" style="font-size: 0.85rem; width: 100%;">
                 </div>
                 <button id="guardar-btn">Guardar Registro</button>
             </div>
 
             <div class="card">
-                <h3>Historial Guardado</h3>
+                <h3>Historial con Evidencias</h3>
                 <ul id="history-list" class="history-list">
+                    <li class="history-item">Cargando...</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- PANTALLA 3: CALENDARIO DE HÁBITOS -->
+        <div id="pantalla-habitos" class="screen" style="display: none;">
+            <div class="card">
+                <h3>Control Diario de Tentaciones</h3>
+                <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px;">Marca tus casillas al final del día:</p>
+                
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="sin-refresco" style="width: 20px; height: 20px;">
+                    <label for="sin-refresco" style="margin: 0; cursor: pointer;">Zero Refresco hoy 🥤</label>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <input type="checkbox" id="sin-chucherias" style="width: 20px; height: 20px;">
+                    <label for="sin-chucherias" style="margin: 0; cursor: pointer;">Cero Chucherías (Sabritas, Cacahuates, etc.) 🥜</label>
+                </div>
+
+                <button id="guardar-habitos-btn">Guardar Estado de Hoy</button>
+            </div>
+
+            <div class="card">
+                <h3>Historial de Hábitos</h3>
+                <ul id="habitos-historial" class="history-list">
                     <li class="history-item">Cargando...</li>
                 </ul>
             </div>
