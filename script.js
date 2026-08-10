@@ -1,6 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
 // 1. FIREBASE
 const firebaseConfig = {
@@ -38,23 +37,31 @@ btnRegistro.addEventListener('click', () => {
     screenChat.classList.remove('active');
 });
 
-// 3. IA REAL DEL COACH (MODELO ACTUALIZADO)
+// 3. IA REAL DEL COACH (MODELO GEMINI-1.5-FLASH DIRECTO)
 const GEMINI_API_KEY = "AQ.Ab8RN6KALx3FFt5tliXpnzVy9Q05LXlEMkJ1GWqx-Djf6UCZXA"; 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 async function consultarIA(mensajeUsuario) {
     try {
-        // Usamos gemini-2.5-flash que es el modelo vigente y activo
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         
         const promptPersonalidad = `Eres un coach de disciplina implacable para Agustín (Guty). Su objetivo es bajar de peso (inició en 94kg) usando Nike Run Club y ejercicios en casa. Responde a su mensaje de forma clara, directa y dura, sin rodeos, sin hacerle sentir mal pero no le dejes pasar excusas. No seas repetitivo. Mensaje de Guty: "${mensajeUsuario}"`;
 
-        const result = await model.generateContent(promptPersonalidad);
-        const response = await result.response;
-        return response.text();
+        const respuesta = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: promptPersonalidad }] }] })
+        });
+        
+        const datos = await respuesta.json();
+        
+        if (datos.error) {
+            return `Error de Google: ${datos.error.message}`;
+        }
+        
+        return datos.candidates[0].content.parts[0].text;
     } catch (error) {
         console.error("Detalle del error IA:", error);
-        return `Error al conectar con el Coach: ${error.message}`;
+        return "Conexión fallida con el servidor de IA. Revisa tu internet.";
     }
 }
 
