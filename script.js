@@ -37,15 +37,24 @@ btnRegistro.addEventListener('click', () => {
     screenChat.classList.remove('active');
 });
 
-// 3. IA REAL DEL COACH (ACTUALIZADO A GEMINI 3.5 FLASH)
+// 3. IA DEL COACH (FIRME, CONSTRUCTORA Y CON ACCESO A LA BITÁCORA)
 const GEMINI_API_KEY = "AQ.Ab8RN6KALx3FFt5tliXpnzVy9Q05LXlEMkJ1GWqx-Djf6UCZXA"; 
 
-async function consultarIA(mensajeUsuario) {
+async function consultarIA(mensajeUsuario, historialBitacora) {
     try {
-        // Usamos la API v1 y el modelo estable actual gemini-3.5-flash
         const url = `https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         
-        const promptPersonalidad = `Eres un coach de disciplina implacable para Agustín (Guty). Su objetivo es bajar de peso (inició en 94kg) usando Nike Run Club y ejercicios en casa. Responde a su mensaje de forma clara, directa y dura, sin rodeos, sin hacerle sentir mal pero no le dejes pasar excusas. No seas repetitivo. Mensaje de Guty: "${mensajeUsuario}"`;
+        // Creamos un resumen de lo que Guty ha guardado para dárselo como contexto al coach
+        let contextoBitacora = "No hay registros recientes en la bitácora.";
+        if (historialBitacora && historialBitacora.length > 0) {
+            const ultimo = historialBitacora[0];
+            contextoBitacora = `Último registro -> Fecha: ${ultimo.fecha}, Peso: ${ultimo.peso ? ultimo.peso + ' kg' : 'No registrado'}, Nota/Bitácora: "${ultimo.nota}".`;
+        }
+
+        const promptPersonalidad = `Eres un coach de disciplina sólido, claro y directo para Agustín (Guty). Su meta es bajar de peso (inició en 94kg) usando Nike Run Club y ejercicios en casa. 
+        Aquí tienes su historial de bitácora actual registrado en la app: [ ${contextoBitacora} ].
+        Responde a su mensaje con autoridad, motivación firme y cero pretextos, pero mantén un trato respetuoso, constructivo y de apoyo sin ser ofensivo ni grosero. No seas repetitivo. 
+        Mensaje de Guty: "${mensajeUsuario}"`;
 
         const respuesta = await fetch(url, {
             method: "POST",
@@ -82,7 +91,10 @@ async function manejarEnvioChat() {
     enviarChatBtn.textContent = "Pensando...";
     enviarChatBtn.disabled = true;
 
-    const respuestaIA = await consultarIA(texto);
+    // Obtenemos los registros locales/nube actuales para pasárselos al coach
+    let registrosActuales = JSON.parse(localStorage.getItem('peso_local')) || [];
+
+    const respuestaIA = await consultarIA(texto, registrosActuales);
     
     agregarBurbuja(respuestaIA, 'coach');
     enviarChatBtn.textContent = "Enviar Mensaje";
@@ -130,6 +142,7 @@ guardarBtn.addEventListener('click', () => {
     guardarBtn.textContent = "Guardar Registro";
     guardarBtn.disabled = false;
     cargarDatos();
+    alert("¡Registro guardado! Ahora el coach ya puede consultarlo en el chat.");
 });
 
 async function cargarDatos() {
