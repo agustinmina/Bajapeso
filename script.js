@@ -37,12 +37,13 @@ btnRegistro.addEventListener('click', () => {
     screenChat.classList.remove('active');
 });
 
-// 3. IA REAL DEL COACH (MODELO GEMINI-1.5-FLASH DIRECTO)
+// 3. IA REAL DEL COACH (ACTUALIZADO A GEMINI 3.5 FLASH)
 const GEMINI_API_KEY = "AQ.Ab8RN6KALx3FFt5tliXpnzVy9Q05LXlEMkJ1GWqx-Djf6UCZXA"; 
 
 async function consultarIA(mensajeUsuario) {
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // Usamos la API v1 y el modelo estable actual gemini-3.5-flash
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         
         const promptPersonalidad = `Eres un coach de disciplina implacable para Agustín (Guty). Su objetivo es bajar de peso (inició en 94kg) usando Nike Run Club y ejercicios en casa. Responde a su mensaje de forma clara, directa y dura, sin rodeos, sin hacerle sentir mal pero no le dejes pasar excusas. No seas repetitivo. Mensaje de Guty: "${mensajeUsuario}"`;
 
@@ -55,13 +56,12 @@ async function consultarIA(mensajeUsuario) {
         const datos = await respuesta.json();
         
         if (datos.error) {
-            return `Error de Google: ${datos.error.message}`;
+            return `Aviso del sistema: ${datos.error.message}`;
         }
         
         return datos.candidates[0].content.parts[0].text;
     } catch (error) {
-        console.error("Detalle del error IA:", error);
-        return "Conexión fallida con el servidor de IA. Revisa tu internet.";
+        return "Error de conexión con la IA. Verifica tu red.";
     }
 }
 
@@ -118,7 +118,7 @@ guardarBtn.addEventListener('click', () => {
 
     if (db) {
         addDoc(collection(db, "registros_peso"), itemData)
-            .catch(e => console.warn("Firebase bloqueado."));
+            .catch(e => console.warn("Firebase pendiente."));
     }
 
     let local = JSON.parse(localStorage.getItem('peso_local')) || [];
